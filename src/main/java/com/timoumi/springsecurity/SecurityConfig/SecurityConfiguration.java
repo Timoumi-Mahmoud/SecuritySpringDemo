@@ -21,8 +21,23 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
        // super.configure(auth);
 
         auth.inMemoryAuthentication()
-                .withUser("admin").password(passwordEncoder().encode(  "admin123")).roles("ADMIN")
-                .and().withUser("mahmoud").password( passwordEncoder().encode("mahmoud123")  ).roles("MANAGEMENT");
+                .withUser("admin").
+                password(passwordEncoder().encode(  "admin123")).
+                roles("ADMIN")
+                .authorities("ACCESS_TEST1", "ACCESS_TEST1")
+
+
+                .and().
+                withUser("mahmoud").
+                password( passwordEncoder().encode("mahmoud123")).
+                roles("USER")
+
+                .and().
+                withUser("manager").
+                password(passwordEncoder().encode("manager123")).
+                roles("MANAGEMENT").
+                authorities("ACCESS_TEST1")
+        ;
     }
 
 
@@ -38,9 +53,15 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         http.
                 authorizeRequests()
                 .antMatchers("/index.html").permitAll()
-                .antMatchers("/profile/index").authenticated()
-                .antMatchers("/admin/index").hasRole("ADMIN")
-                .antMatchers("/management/index").hasAnyRole("ADMIN", "MANAGEMENT")
+                .antMatchers("/profile/**").authenticated()
+                .antMatchers("/admin/**").hasRole("ADMIN")
+                .antMatchers("/management/**").hasAnyRole("ADMIN", "MANAGEMENT")
+                //protecting Resources not views
+                //.antMatchers("/api/public/**").authenticated() //hasRole work too
+                .antMatchers("/api/public/test1").hasAuthority("ACCESS_TEST1")
+                .antMatchers("/api/public/test2").hasAuthority("ACCESS_TEST2")
+                 //.antMatchers("/api/public/test1").authenticated()
+
                 .and()
                 .httpBasic();
         //  "/path/**"
