@@ -75,4 +75,16 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         return new  BCryptPasswordEncoder();
     }
 
+
+
+    //Enable SSL/HTTPS
+    /*
+    steps:
+     1)certificate (self signed or buy
+     2) Modify app.properties
+     3)add @bean for ServletWebServerFactory(reddirect all http trafic to https)
+
+
+     .\keytool -genkey -alias bootsecurity -storetype PKCS12 -keyalg RSA -Keysize 2048 -keystore bootsecurity.p12 -validity 3650
+     */
 }
