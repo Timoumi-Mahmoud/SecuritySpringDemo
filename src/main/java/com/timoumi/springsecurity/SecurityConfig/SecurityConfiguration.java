@@ -1,8 +1,12 @@
 package com.timoumi.springsecurity.SecurityConfig;
 
 
+import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
+import com.timoumi.springsecurity.entity.predifinedClasses.UserPrincipalDetailsService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -12,44 +16,30 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 @EnableWebSecurity
-
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+
+    private UserPrincipalDetailsService userPrincipalDetailsService;
+
+    public SecurityConfiguration(UserPrincipalDetailsService userPrincipalDetailsService) {
+        this.userPrincipalDetailsService = userPrincipalDetailsService;
+    }
 
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-       // super.configure(auth);
-
-        auth.inMemoryAuthentication()
-                .withUser("admin").
-                password(passwordEncoder().encode(  "admin123")).
-                roles("ADMIN")
-                .authorities("ACCESS_TEST1", "ACCESS_TEST1")
 
 
-                .and().
-                withUser("mahmoud").
-                password( passwordEncoder().encode("mahmoud123")).
-                roles("USER")
+        auth.authenticationProvider(authenticationProvider());
+        System.out.println("\n "+ auth);
 
-                .and().
-                withUser("manager").
-                password(passwordEncoder().encode("manager123")).
-                roles("MANAGEMENT").
-                authorities("ACCESS_TEST1")
-        ;
+
+
     }
 
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        //super.configure(http);
-//authorization
-    /*    http.
-                authorizeRequests()
-                .anyRequest().authenticated()
-                .and()
-                .httpBasic();*/
+
         http.
                 authorizeRequests()
                 .antMatchers("/index.html").permitAll()
@@ -61,6 +51,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/public/test1").hasAuthority("ACCESS_TEST1")
                 .antMatchers("/api/public/test2").hasAuthority("ACCESS_TEST2")
                  //.antMatchers("/api/public/test1").authenticated()
+                .antMatchers("/api/public/users").hasRole("ADMIN")
 
                 .and()
                 .httpBasic();
@@ -68,7 +59,21 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         //the order of antMatchers is so important for example if i put  anyRequest().permetAll() at the beginning of the chain
 
 
+
+
     }
+
+
+    @Bean
+    DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
+        daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
+        daoAuthenticationProvider.setUserDetailsService(this.userPrincipalDetailsService);
+
+        System.out.println("\n heererererr \n "+ userPrincipalDetailsService);
+        return daoAuthenticationProvider;
+    }
+
 
     @Bean
     PasswordEncoder passwordEncoder(){
