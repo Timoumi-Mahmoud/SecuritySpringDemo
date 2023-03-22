@@ -3,6 +3,7 @@ package com.timoumi.springsecurity.SecurityConfig;
 
 import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
 import com.timoumi.springsecurity.entity.predifinedClasses.UserPrincipalDetailsService;
+import com.timoumi.springsecurity.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,18 +13,25 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+
+    private UserRepository userRepository;
+   // private BasicAuthenticationEntryPoint basicAuthenticationEntryPoint;
     private UserPrincipalDetailsService userPrincipalDetailsService;
 
-    public SecurityConfiguration(UserPrincipalDetailsService userPrincipalDetailsService) {
+    public SecurityConfiguration(UserPrincipalDetailsService userPrincipalDetailsService , UserRepository userRepository /*,BasicAuthenticationEntryPoint basicAuthenticationEntryPoint*/) {
         this.userPrincipalDetailsService = userPrincipalDetailsService;
+        this.userRepository= userRepository;
+     //   this.basicAuthenticationEntryPoint= basicAuthenticationEntryPoint;
     }
 
     @Override
@@ -34,9 +42,25 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
+                .csrf().disable()
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                //remove csrf and state in session because jwt  do not need  them
+
+                .and()
+                .addFilter(new JwtAuthenticationFilter(authenticationManager()))
+                .addFilter(new JwtAuthorizationFilter(authenticationManager(), this.userRepository))
+                .authorizeRequests()
+                .antMatchers("/login").permitAll()
+                .antMatchers("/api/public/management/*").hasRole("MANAGEMENT")
+                .antMatchers("/api/public/admin/*").hasRole("ADMIN")
+
+        ;
+
+
+                /*
                 .authorizeRequests()
                 .antMatchers("/index.html").permitAll()
-                .antMatchers("/profile/**").authenticated()
+                .antMatchers("/api/public/test").authenticated()
                 .antMatchers("/admin/**").hasRole("ADMIN")
                 .antMatchers("/management/**").hasAnyRole("ADMIN", "MANAGER")
                 .antMatchers("/api/public/test1").hasAuthority("ACCESS_TEST1")
@@ -52,7 +76,10 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .logout().logoutRequestMatcher(new AntPathRequestMatcher("/logout")).logoutSuccessUrl("/login")
                 .and()
                 .rememberMe().tokenValiditySeconds(2592000).key("mySecret!").userDetailsService(userPrincipalDetailsService).rememberMeParameter("checkRememberMe");
+
+    */
     }
+
         //  "/path/**"
         //the order of antMatchers is so important for example if i put  anyRequest().permetAll() at the beginning of the chain
 
