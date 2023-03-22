@@ -10,7 +10,7 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private long idUser;
+    private long id;
 
     @Column(nullable = false)
     private String username;
@@ -18,7 +18,6 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    //active or not blocked
     private int active;
 
     private String roles = "";
@@ -36,7 +35,7 @@ public class User {
     protected User(){}
 
     public long getId() {
-        return idUser;
+        return id;
     }
 
     public String getUsername() {
@@ -59,7 +58,6 @@ public class User {
         return permissions;
     }
 
-    //transform Role to list
     public List<String> getRoleList(){
         if(this.roles.length() > 0){
             return Arrays.asList(this.roles.split(","));

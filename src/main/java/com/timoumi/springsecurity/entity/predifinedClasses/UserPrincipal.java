@@ -10,11 +10,11 @@ import java.util.Collection;
 import java.util.List;
 
 public class UserPrincipal implements UserDetails {
-     User user;
-    public UserPrincipal(User user){
-        this.user= user;
-    }
+    private User user;
 
+    public UserPrincipal(User user){
+        this.user = user;
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -62,6 +62,6 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return this.user.getActive() ==1;
+        return this.user.getActive() == 1;
     }
 }
