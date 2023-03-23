@@ -7,8 +7,10 @@ import com.timoumi.springsecurity.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -17,12 +19,15 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+
+@EnableGlobalMethodSecurity(prePostEnabled = true)
+public class SecurityConfiguration  {
 
     private UserRepository userRepository;
    // private BasicAuthenticationEntryPoint basicAuthenticationEntryPoint;
@@ -34,25 +39,27 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
      //   this.basicAuthenticationEntryPoint= basicAuthenticationEntryPoint;
     }
 
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) {
-        auth.authenticationProvider(authenticationProvider());
-    }
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
+    @Bean
+    public SecurityFilterChain configure(HttpSecurity http) throws Exception {
+    return     http
                 .csrf().disable()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 //remove csrf and state in session because jwt  do not need  them
 
                 .and()
-                .addFilter(new JwtAuthenticationFilter(authenticationManager()))
-                .addFilter(new JwtAuthorizationFilter(authenticationManager(), this.userRepository))
+                .addFilter(new JwtAuthenticationFilter(authenticationManager(http.getSharedObject(AuthenticationConfiguration.class))))
+                .addFilter(new JwtAuthorizationFilter(authenticationManager(http.getSharedObject(AuthenticationConfiguration.class)), this.userRepository))
                 .authorizeRequests()
                 .antMatchers("/login").permitAll()
                 .antMatchers("/api/public/management/*").hasRole("MANAGEMENT")
-                .antMatchers("/api/public/admin/*").hasRole("ADMIN")
+                .antMatchers("/api/public/admin/*").hasRole("ADMIN").and()
+                .build()
 
         ;
 
