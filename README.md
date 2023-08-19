@@ -1,4 +1,5 @@
 # SecuritySpringDemo
+
 Exploring all sorts of spring security ways:
 
 - branch BasicHttpAuthentication: 
